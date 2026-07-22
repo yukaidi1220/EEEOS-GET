@@ -1,6 +1,6 @@
 import { SITE, NIGHTLY, MSUPDATE, type NightlyChannel, type MSUpdateChannel } from "../config";
 import { fetchWithRetry } from "./fetch";
-import { formatBeijing } from "./format";
+import { formatSourceDate } from "./format";
 
 /** 归一化后的统一卡片模型（前端只认这个） */
 export interface BuildCard {
@@ -68,7 +68,7 @@ export function normalizeNightly(raw: any, ch: NightlyChannel): BuildCard {
     arch: os.arch ?? "",
     osDisplay: os.ver ? `鹅鹅鹅系统 Win${os.ver}` : "鹅鹅鹅系统",
     osVersion: os.version ?? "",
-    date: formatBeijing(sys.date),
+    date: formatSourceDate(sys.datefull ?? sys.date),
     sizeText: sys.size ?? "",
     sizeBytes: Number(sys.byte) || 0,
     sha256: sys.sha256,
@@ -88,7 +88,7 @@ export function normalizeMSUpdate(raw: any, ch: MSUpdateChannel): BuildCard {
     arch: raw.os_arch ?? ch.arch,
     osDisplay: raw.os_display ?? "",
     osVersion: raw.os_version ?? "",
-    date: formatBeijing(raw.date),
+    date: formatSourceDate(raw.date),
     sizeText: formatBytes(Number(raw.size) || 0),
     sizeBytes: Number(raw.size) || 0,
     sha256: h.sha256,

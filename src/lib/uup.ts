@@ -7,16 +7,15 @@
  */
 
 import { fetchText, FetchError } from "./fetch";
-import { formatBeijing } from "./format";
+import { formatSourceDate } from "./format";
 import { UUP_CATEGORIES } from "../config";
 import type { UUPBuild, UUPGroup } from "./buildData";
 
 const UUP_BASE = "https://uupdump.cn"; // 生成构建详情链接时用（用户浏览器侧打开）
 // 镜像站列表：构建时依次尝试，任一可用即可，提升 CI 拉取稳定性（单点易被限流）
 const UUP_MIRRORS = [
-  "https://uupdump.cn",
   "https://uupdump.net",
-  "https://uupdump.ts.sjtu.cn",
+  "https://uupdump.cn",
 ];
 
 /** 去掉 HTML 标签并压缩空白 */
@@ -54,7 +53,7 @@ export function parseBuildsFromHtml(html: string): UUPBuild[] {
 
     const tds = [...row.matchAll(/<td[^>]*>([\s\S]*?)<\/td>/g)].map((x) => stripHtml(x[1]));
     const arch = normalizeArch(tds[1] ?? "");
-    const date = formatBeijing(tds[2]);
+    const date = formatSourceDate(tds[2]);
 
     const buildM = title.match(/\(([\d]+(?:\.\d+)*)\)/);
     const build = buildM ? buildM[1] : "";
