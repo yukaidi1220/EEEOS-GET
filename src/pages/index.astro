@@ -37,6 +37,7 @@ const builtAtText = formatBeijingInstant(data.builtAt);
           </div>
           <div class="tools">
             <label class="switch"><input type="checkbox" id="archArm" checked /> 不看 ARM64</label>
+            <label class="switch"><input type="checkbox" id="archX86" checked /> 不看 32 位</label>
             <input class="search" id="search" type="search" placeholder="搜索版本 / 架构 / 构建号…" />
           </div>
         </div>
@@ -89,6 +90,7 @@ const builtAtText = formatBeijingInstant(data.builtAt);
       let activeTab: "nightly" | "msupdate" | "uup" = "nightly";
       let query = "";
       let hideArm = true; // 默认勾选「不看 ARM64」
+      let hideX86 = true; // 默认勾选「不看 32 位」
 
       function esc(s: string): string {
         return (s ?? "").replace(/[&<>"']/g, (c) =>
@@ -198,10 +200,12 @@ const builtAtText = formatBeijingInstant(data.builtAt);
               return `<div class="group"><div class="group-head"><h2 class="group-title">${esc(grp.label)}</h2></div><div class="card card-empty"><div class="empty">检测失败</div><div class="empty-sub">${esc(grp.error)}</div></div></div>`;
             }
             let builds = grp.builds;
-            // 仅展示真正的 Windows 操作系统构建（排除 .NET Framework / OOBE 等非系统版本更新）
+            // 仅展示真正的 Windows 操作系统版本构建（排除 .NET Framework / OOBE / Preview / Security 等非版本更新）
             builds = builds.filter(isOsBuild);
             // 默认隐藏 ARM64；取消勾选「不看 ARM64」时一并展示 ARM64
             builds = builds.filter((b) => (hideArm ? !/arm/i.test(b.arch) : true));
+            // 默认隐藏 32 位；取消勾选「不看 32 位」时一并展示 x86
+            builds = builds.filter((b) => (hideX86 ? !/x86/i.test(b.arch) : true));
             if (query) {
               const q = query;
               builds = builds.filter((b) =>
@@ -246,7 +250,8 @@ const builtAtText = formatBeijingInstant(data.builtAt);
       /** 对一组 LoadResult 做：ARM64 过滤 → 搜索过滤 → 按分组归类 → 每组按标题（版本）倒序 */
       function buildGroups(results: LoadResult[]): { body: string; total: number } {
         let items = results.filter((r) =>
-          hideArm ? r.arch !== "arm64" : true
+          (hideArm ? r.arch !== "arm64" : true) &&
+          (hideX86 ? r.arch !== "x86" : true)
         );
         if (query) items = items.filter((r) => haystack(r).includes(query));
 
@@ -306,6 +311,11 @@ const builtAtText = formatBeijingInstant(data.builtAt);
 
       $("#archArm").addEventListener("change", (e) => {
         hideArm = (e.target as HTMLInputElement).checked;
+        render();
+      });
+
+      $("#archX86").addEventListener("change", (e) => {
+        hideX86 = (e.target as HTMLInputElement).checked;
         render();
       });
 

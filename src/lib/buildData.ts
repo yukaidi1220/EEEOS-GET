@@ -84,10 +84,17 @@ export async function collectData(): Promise<SiteData> {
   };
 }
 
-/** 判断是否为真正的 Windows 操作系统构建（排除 .NET Framework / OOBE 等非系统版本更新） */
+/** 判断是否为真正的 Windows 操作系统「版本」构建（如 "Windows 11, version 26H1 (28000.2525)"）。
+ *  排除 .NET Framework / OOBE / Preview Update / Security Update 等非版本更新——
+ *  这些虽带 28000.x 编号，但并非系统版本本体（如 28000.2605 仅是 Preview Update，28000.9340 仅是 .NET 更新）。 */
 export function isOsBuild(b: UUPBuild): boolean {
   const t = b.title.toLowerCase();
-  return !t.includes(".net framework") && !t.includes("oobe");
+  return (
+    !t.includes(".net framework") &&
+    !t.includes("oobe") &&
+    !t.includes("preview update") &&
+    !t.includes("security update")
+  );
 }
 
 /** 按「点分数字」比较两个构建号（如 28000.2525 vs 28000.9340），返回 -1/0/1 */
