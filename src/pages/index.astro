@@ -206,7 +206,27 @@ const builtAtText = formatBeijingInstant(data.builtAt);
         return { body: blocks, total };
       }
 
-      /** 对一组 LoadResult 做：ARM64 过滤 → 搜索过滤 → 按分组归类 → 每组按日期倒序取最近 5 个 */
+      /** 取卡片标题（有构建用展示名，无构建用原始标签），用于按标题排序 */
+      function sortTitle(r: LoadResult): string {
+        return r.card?.name ?? r.label;
+      }
+
+      /** 根据标题（版本）生成可比较的权重：Windows 大版本优先，其次按发布年份/半年（H1/H2）、LTSC/LTSB 年份、SP。权重越大越新 */
+      function titleRank(title: string): number {
+        const winM = title.match(/Win(\d+)/i);
+        const win = winM ? +winM[1] : 0;
+        let yr = 0;
+        const h = title.match(/(\d{2})H([12])/); // 26H1 / 25H2 ...
+        if (h) yr = 2000 + +h[1] + (+h[2] === 1 ? 0 : 0.5);
+        else {
+          const l = title.match(/LTS[CB](\d{4})/); // LTSC2024 / LTSB2016 ...
+          if (l) yr = +l[1];
+          else if (/SP\d+/i.test(title)) yr = 2009; // Win7 SP1 大致年代
+        }
+        return win * 10000 + yr;
+      }
+
+      /** 对一组 LoadResult 做：ARM64 过滤 → 搜索过滤 → 按分组归类 → 每组按标题（版本）倒序 */
       function buildGroups(results: LoadResult[]): { body: string; total: number } {
         let items = results.filter((r) =>
           armOnly ? r.arch === "arm64" : r.arch !== "arm64"
@@ -221,11 +241,10 @@ const builtAtText = formatBeijingInstant(data.builtAt);
 
         let total = 0;
         const blocks = [...byGroup.entries()].map(([g, rs]) => {
-          // 每个分组按构建日期倒序，仅保留最近 5 个新版本
-          rs.sort((a, b) => toTime(b.card?.date) - toTime(a.card?.date));
-          const top = rs.slice(0, 5);
-          total += top.length;
-          const cards = top.map((r) => (r.card ? cardHtml(r.card) : emptyHtml(r.label)));
+          // 按标题（版本）倒序：新版本在前（如 26H1 先于 25H2）；空卡片同样按标题参与排序
+          rs.sort((a, b) => titleRank(sortTitle(b)) - titleRank(sortTitle(a)));
+          total += rs.length;
+          const cards = rs.map((r) => (r.card ? cardHtml(r.card) : emptyHtml(r.label)));
           return groupHtml(g, cards);
         });
         return { body: blocks.join(""), total };
