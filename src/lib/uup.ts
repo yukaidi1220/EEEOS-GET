@@ -11,7 +11,13 @@ import { formatBeijing } from "./format";
 import { UUP_CATEGORIES } from "../config";
 import type { UUPBuild, UUPGroup } from "./buildData";
 
-const UUP_BASE = "https://uupdump.cn";
+const UUP_BASE = "https://uupdump.cn"; // 生成构建详情链接时用（用户浏览器侧打开）
+// 镜像站列表：构建时依次尝试，任一可用即可，提升 CI 拉取稳定性（单点易被限流）
+const UUP_MIRRORS = [
+  "https://uupdump.cn",
+  "https://uupdump.net",
+  "https://uupdump.ts.sjtu.cn",
+];
 
 /** 去掉 HTML 标签并压缩空白 */
 function stripHtml(s: string): string {
@@ -65,28 +71,49 @@ export function parseBuildsFromHtml(html: string): UUPBuild[] {
   return builds;
 }
 
-/** 检测分页（<div class="ui pagination menu"> 内的 known.php 链接），返回后续页绝对地址 */
+/** 检测分页（<div class="ui pagination menu"> 内带绝对地址的 known.php 链接），返回后续页绝对地址 */
 function findPagination(html: string): string[] {
   const block = html.match(/<div class="ui pagination menu">([\s\S]*?)<\/div>/);
   if (!block) return [];
   const pages: string[] = [];
-  const linkRe = /known\.php\?([^"']+)/g;
+  const linkRe = /href=["'](https?:\/\/[^\s"']*known\.php\?[^"']+)["']/gi;
   let lm: RegExpExecArray | null;
   while ((lm = linkRe.exec(block[1]))) {
-    pages.push(`${UUP_BASE}/known.php?${lm[1].replace(/&amp;/g, "&")}`);
+    pages.push(lm[1].replace(/&amp;/g, "&"));
   }
   return pages;
 }
 
-/** 检测单个分类下的所有 UUP 构建（含分页） */
+/** 检测单个分类下的所有 UUP 构建（含分页）。依次尝试各镜像站，任一成功即用 */
 export async function detectUUP(category: string, label: string): Promise<UUPGroup> {
-  const url = `${UUP_BASE}/known.php?q=${encodeURIComponent(`category:${category}`)}`;
-  try {
-    // fetchText 直接返回响应体字符串（并非 { text } 对象）
-    const rawHtml = await fetchText(url, { timeout: 30000 });
-    if (!rawHtml || !/<tr>/.test(rawHtml)) {
-      console.warn(`[uup][${category}] 响应异常（无表格），前 300 字符：\n${String(rawHtml).slice(0, 300)}`);
+  const urlFor = (base: string) =>
+    `${base}/known.php?q=${encodeURIComponent(`category:${category}`)}`;
+
+  let rawHtml: string | null = null;
+  let lastErr: unknown;
+  for (const base of UUP_MIRRORS) {
+    try {
+      const html = await fetchText(urlFor(base), { timeout: 30000 });
+      if (html && /<tr>/.test(html)) {
+        rawHtml = html;
+        break;
+      }
+      console.warn(`[uup][${category}][${base}] 响应中无表格，尝试下一个镜像`);
+    } catch (e) {
+      lastErr = e;
+      console.warn(`[uup][${category}][${base}] 拉取失败：${(e as Error)?.message ?? e}，尝试下一个镜像`);
     }
+  }
+
+  if (!rawHtml) {
+    const msg =
+      lastErr instanceof FetchError
+        ? `所有镜像均不可用（${lastErr.message}）`
+        : (lastErr as Error)?.message ?? "所有 UUP 镜像均不可用";
+    return { category, label, builds: [], error: msg };
+  }
+
+  try {
     let builds = parseBuildsFromHtml(rawHtml);
 
     const pages = findPagination(rawHtml);
@@ -107,7 +134,7 @@ export async function detectUUP(category: string, label: string): Promise<UUPGro
 
     return { category, label, builds };
   } catch (e) {
-    const msg = e instanceof FetchError ? `拉取/解析失败（${e.message}）` : (e as Error)?.message ?? String(e);
+    const msg = e instanceof FetchError ? `解析失败（${e.message}）` : (e as Error)?.message ?? String(e);
     return { category, label, builds: [], error: msg };
   }
 }

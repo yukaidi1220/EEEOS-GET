@@ -256,6 +256,8 @@ body {
   font-size: 16px;
   font-weight: 650;
   line-height: 1.35;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 .badge {
   flex: none;
@@ -393,6 +395,9 @@ body {
 .empty {
   font-weight: 600;
   color: var(--text);
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  max-width: 100%;
 }
 .empty-sub {
   font-size: 12.5px;
