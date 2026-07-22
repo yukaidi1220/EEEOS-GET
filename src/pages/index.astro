@@ -104,7 +104,10 @@ const builtAtText = formatBeijingInstant(data.builtAt);
         return `<div class="no-results">没有匹配的构建</div>`;
       }
 
-      function cardHtml(c: BuildCard): string {
+      function cardHtml(
+        c: BuildCard,
+        extra?: { outdated?: boolean; uupLatest?: { build: string; url?: string } }
+      ): string {
         const badge =
           c.type === "nightly"
             ? `<span class="badge badge-nightly">修改版</span>`
@@ -126,6 +129,16 @@ const builtAtText = formatBeijingInstant(data.builtAt);
           .filter(Boolean)
           .join("");
 
+        const update = extra?.outdated
+          ? `<div class="card-update"><span class="badge badge-update">UUP 更新可用</span> 最新构建 ${esc(
+              extra.uupLatest?.build ?? ""
+            )}${
+              extra.uupLatest?.url
+                ? ` · <a href="${esc(extra.uupLatest.url)}" target="_blank" rel="noopener">前往 UUP</a>`
+                : ""
+            }</div>`
+          : "";
+
         return `
           <article class="card">
             <div class="card-head">
@@ -133,6 +146,7 @@ const builtAtText = formatBeijingInstant(data.builtAt);
               ${badge}
             </div>
             ${meta ? `<div class="card-meta">${meta}</div>` : ""}
+            ${update}
             <dl class="card-info">
               <div><dt>日期</dt><dd>${esc(c.date || "—")}</dd></div>
               <div><dt>大小</dt><dd>${esc(c.sizeText || "—")}</dd></div>
@@ -244,7 +258,7 @@ const builtAtText = formatBeijingInstant(data.builtAt);
           // 按标题（版本）倒序：新版本在前（如 26H1 先于 25H2）；空卡片同样按标题参与排序
           rs.sort((a, b) => titleRank(sortTitle(b)) - titleRank(sortTitle(a)));
           total += rs.length;
-          const cards = rs.map((r) => (r.card ? cardHtml(r.card) : emptyHtml(r.label)));
+          const cards = rs.map((r) => (r.card ? cardHtml(r.card, r) : emptyHtml(r.label)));
           return groupHtml(g, cards);
         });
         return { body: blocks.join(""), total };

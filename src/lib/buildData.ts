@@ -55,10 +55,39 @@ export async function collectData(): Promise<SiteData> {
     }),
   ]);
 
+  // 原版系统 ↔ UUP 最新版本比对：
+  // 若 UUP 同一分类（同架构优先）中存在比本构建更大的构建号，说明原版系统版本已落后，标记 outdated。
+  const uupByCat = new Map(uup.map((g) => [g.category, g]));
+  for (const r of msupdate) {
+    if (!r.uupCategory || !r.card) continue;
+    const grp = uupByCat.get(r.uupCategory);
+    if (!grp || grp.builds.length === 0) continue;
+    const sameArch = grp.builds.filter((b) => b.arch === r.arch);
+    const pool = sameArch.length ? sameArch : grp.builds;
+    const latest = pool.reduce((m, b) => (cmpBuild(b.build, m.build) > 0 ? b : m), pool[0]);
+    if (cmpBuild(latest.build, r.card.osVersion) > 0) {
+      r.outdated = true;
+      r.uupLatest = { build: latest.build, url: latest.url };
+    }
+  }
+
   return {
     nightly,
     msupdate,
     uup,
     builtAt: new Date().toISOString(),
   };
+}
+
+/** 按「点分数字」比较两个构建号（如 28000.2525 vs 28000.9340），返回 -1/0/1 */
+function cmpBuild(a: string, b: string): number {
+  const pa = a.split(".").map((n) => parseInt(n, 10) || 0);
+  const pb = b.split(".").map((n) => parseInt(n, 10) || 0);
+  const len = Math.max(pa.length, pb.length);
+  for (let i = 0; i < len; i++) {
+    const x = pa[i] ?? 0;
+    const y = pb[i] ?? 0;
+    if (x !== y) return x - y;
+  }
+  return 0;
 }

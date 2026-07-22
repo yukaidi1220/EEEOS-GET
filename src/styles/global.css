@@ -275,6 +275,28 @@ body {
   background: var(--msupdate-soft);
   color: var(--msupdate);
 }
+.badge-update {
+  background: #fff4e0;
+  color: #b9760a;
+}
+.card-update {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  padding: 7px 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #b9760a;
+  background: #fff8ec;
+  border: 1px solid #f4e2bf;
+  border-radius: 10px;
+}
+.card-update a {
+  color: #b9760a;
+  text-decoration: underline;
+}
 .tag {
   flex: none;
   font-size: 11.5px;

@@ -27,7 +27,24 @@ export interface LoadResult {
   arch: string;
   card: BuildCard | null;
   error?: string;
+  /** 关联到的 UUP 分类 slug（原版系统专用，用于和 UUP 最新版本比对） */
+  uupCategory?: string;
+  /** 由 buildData 在收集阶段填充：UUP 中比本构建更新的最新版本 */
+  uupLatest?: { build: string; url?: string };
+  /** 由 buildData 填充：本构建版本是否已落后于 UUP 最新版本 */
+  outdated?: boolean;
 }
+
+/** 原版系统 (os_ver, release) → UUP 分类 slug 的映射（仅列出 uupdump 实际存在的分类） */
+const MS_TO_UUP: Record<string, string> = {
+  "11-26H1": "w11-26h1",
+  "11-25H2": "w11-25h2",
+  "11-24H2": "w11-24h2",
+  "11-23H2": "w11-23h2",
+  "11-21H2": "w11-21h2",
+  "10-22H2": "w10-22h2",
+  // 注：LTSC2024 / LTSC2021 / LTSC2019 / LTSB2016 在 uupdump 无对应分类（返回 400），暂无法比对
+};
 
 /** 从 Nightly 文件名推断架构，如 EEEOS_Win11_26H1_Pro_ARM64_CN_Full_Net → arm64 */
 function archFromFile(file: string): string {
@@ -120,7 +137,14 @@ export async function loadMSUpdate(): Promise<LoadResult[]> {
       const arch = ch.arch.toLowerCase();
       try {
         const raw = await fetchJson(msupdateUrl(ch));
-        return { label, group: ch.group ?? "其他", tag: ch.tag, arch, card: normalizeMSUpdate(raw, ch) };
+        return {
+          label,
+          group: ch.group ?? "其他",
+          tag: ch.tag,
+          arch,
+          uupCategory: MS_TO_UUP[`${ch.os_ver}-${ch.release}`],
+          card: normalizeMSUpdate(raw, ch),
+        };
       } catch (e) {
         return { label, group: ch.group ?? "其他", tag: ch.tag, arch, card: null, error: String(e) };
       }
