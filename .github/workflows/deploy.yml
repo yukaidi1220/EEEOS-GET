@@ -1,0 +1,41 @@
+name: Build & Deploy to EdgeOne Pages
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # 每 6 小时重建一次，保持「构建时拉取」的数据新鲜
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (数据在构建时拉取)
+        run: npm run build
+        env:
+          # 守卫脚本通过 GITHUB_ACTIONS 放行本地被禁止的构建
+          GITHUB_ACTIONS: "true"
+
+      - name: Deploy to EdgeOne Pages
+        uses: TencentEdgeOne/edgeone-pages-action@v1
+        with:
+          token: ${{ secrets.EDGEONE_API_TOKEN }}
+          project-name: "EEEOS-GET"
+          build-path: "./dist"

@@ -1,0 +1,293 @@
+---
+import "../styles/global.css";
+import { SITE } from "../config";
+import { collectData } from "../lib/buildData";
+import { formatBeijingInstant } from "../lib/format";
+
+const year = new Date().getFullYear();
+// 构建时（或开发请求时）在服务端拉取全部数据，直接写入页面
+const data = await collectData();
+// 构建时间（UTC 时间戳）统一转换为北京时间「YYYY-MM-DD HH:MM」
+const builtAtText = formatBeijingInstant(data.builtAt);
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{SITE.title}</title>
+    <meta name="description" content={SITE.subtitle} />
+  </head>
+  <body>
+    <div class="page">
+      <header class="hero">
+        <div class="hero-inner">
+          <h1 class="hero-title">{SITE.title}</h1>
+          <p class="hero-sub">{SITE.subtitle}</p>
+        </div>
+      </header>
+
+      <main class="wrap">
+        <div class="toolbar">
+          <div class="tabs">
+            <button class="tab active" data-tab="nightly">修改版系统 <span class="cnt" id="cntNightly">0</span></button>
+            <button class="tab" data-tab="msupdate">原版系统 <span class="cnt" id="cntMsupdate">0</span></button>
+            <button class="tab" data-tab="uup">UUP 版本 <span class="cnt" id="cntUup">0</span></button>
+          </div>
+          <div class="tools">
+            <label class="switch"><input type="checkbox" id="archArm" /> 仅看 ARM64</label>
+            <input class="search" id="search" type="search" placeholder="搜索版本 / 架构 / 构建号…" />
+          </div>
+        </div>
+
+        <p class="updated">数据构建于 {builtAtText} · 重新部署（重建）可刷新</p>
+
+        <section id="nightlyGrid" class="groups"></section>
+        <section id="msupdateGrid" class="groups" hidden></section>
+        <section id="uupGrid" class="groups" hidden></section>
+
+        <div class="hint">
+          数据在 <b>构建时</b> 从数据源拉取并写入页面，因此刷新浏览器不会更新内容；
+          如需最新数据，请触发一次新的构建 / 部署（仓库已配置定时重建）。
+        </div>
+      </main>
+
+      <footer class="foot">
+        <span>© {year} {SITE.title}</span>
+        {SITE.repo && (<><span class="foot-sep">·</span><a href={SITE.repo} target="_blank" rel="noopener">仓库</a></>)}
+      </footer>
+    </div>
+
+    <!-- 构建时数据通过 define:vars 安全注入，客户端脚本直接消费，不再发起任何网络请求 -->
+    <script define:vars={{ INITIAL_DATA: data }} is:inline>
+      window.__INITIAL_DATA__ = INITIAL_DATA;
+    </script>
+
+    <script>
+      import { SITE } from "../config";
+      import { toBeijingMs } from "../lib/format";
+      import type { SiteData, UUPGroup, UUPBuild } from "../lib/buildData";
+      import type { LoadResult, BuildCard } from "../lib/sources";
+
+      declare global {
+        interface Window {
+          __INITIAL_DATA__?: SiteData;
+        }
+      }
+
+      const $ = <T extends HTMLElement = HTMLElement>(s: string) => document.querySelector<T>(s)!;
+      const data = window.__INITIAL_DATA__!;
+
+      const grids = {
+        nightly: $("#nightlyGrid") as HTMLElement,
+        msupdate: $("#msupdateGrid") as HTMLElement,
+        uup: $("#uupGrid") as HTMLElement,
+      };
+
+      let activeTab: "nightly" | "msupdate" | "uup" = "nightly";
+      let query = "";
+      let armOnly = false;
+
+      function esc(s: string): string {
+        return (s ?? "").replace(/[&<>"']/g, (c) =>
+          ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string)
+        );
+      }
+
+      /** 把日期串转为可排序的时间戳（按北京时间组件，跨运行时一致） */
+      function toTime(s: string | undefined): number {
+        return toBeijingMs(s);
+      }
+
+      function noResults(): string {
+        return `<div class="no-results">没有匹配的构建</div>`;
+      }
+
+      function cardHtml(c: BuildCard): string {
+        const badge =
+          c.type === "nightly"
+            ? `<span class="badge badge-nightly">修改版</span>`
+            : `<span class="badge badge-msupdate">原版</span>`;
+        const hash = [
+          c.sha256 &&
+            `<div class="hash-row"><span class="hash-label">SHA256</span><span class="hash-val">${esc(c.sha256)}</span><button class="copy" data-copy="${esc(c.sha256)}">复制</button></div>`,
+          c.md5 &&
+            `<div class="hash-row"><span class="hash-label">MD5</span><span class="hash-val">${esc(c.md5)}</span><button class="copy" data-copy="${esc(c.md5)}">复制</button></div>`,
+        ]
+          .filter(Boolean)
+          .join("");
+
+        const meta = [
+          c.arch && `<span>${esc(c.arch)}</span>`,
+          c.osVersion && `<span>构建 ${esc(c.osVersion)}</span>`,
+          c.note && `<span>${esc(c.note)}</span>`,
+        ]
+          .filter(Boolean)
+          .join("");
+
+        return `
+          <article class="card">
+            <div class="card-head">
+              <h3 class="card-title">${esc(c.name)}</h3>
+              ${badge}
+            </div>
+            ${meta ? `<div class="card-meta">${meta}</div>` : ""}
+            <dl class="card-info">
+              <div><dt>日期</dt><dd>${esc(c.date || "—")}</dd></div>
+              <div><dt>大小</dt><dd>${esc(c.sizeText || "—")}</dd></div>
+            </dl>
+            ${hash ? `<div class="hash">${hash}</div>` : ""}
+            <a class="dl" href="${esc(c.downloadUrl)}" target="_blank" rel="noopener">下载</a>
+          </article>`;
+      }
+
+      function emptyHtml(label: string): string {
+        return `
+          <div class="card card-empty">
+            <div class="empty">${esc(label)}</div>
+            <div class="empty-sub">${esc(SITE.emptyHint)}</div>
+          </div>`;
+      }
+
+      function groupHtml(title: string, items: string[]): string {
+        return `
+          <div class="group">
+            <div class="group-head">
+              <h2 class="group-title">${esc(title)}</h2>
+              <span class="group-count">${items.length}</span>
+            </div>
+            <div class="grid">${items.join("")}</div>
+          </div>`;
+      }
+
+      function haystack(r: LoadResult): string {
+        return `${r.label} ${r.group} ${r.tag ?? ""} ${r.card?.osVersion ?? ""} ${r.card?.name ?? ""}`.toLowerCase();
+      }
+
+      function uupItemHtml(b: UUPBuild): string {
+        return `
+          <a class="uup-item" href="${esc(b.url)}" target="_blank" rel="noopener">
+            <span class="uup-build">${esc(b.build || "—")}</span>
+            <span class="uup-arch">${esc(b.arch || "—")}</span>
+            <span class="uup-title">${esc(b.title)}</span>
+            <span class="uup-date">${esc(b.date || "")}</span>
+          </a>`;
+      }
+
+      function renderUUP(): { body: string; total: number } {
+        let total = 0;
+        const blocks = data.uup
+          .map((grp: UUPGroup) => {
+            if (grp.error) {
+              return `<div class="group"><div class="group-head"><h2 class="group-title">${esc(grp.label)}</h2></div><div class="card card-empty"><div class="empty">检测失败</div><div class="empty-sub">${esc(grp.error)}</div></div></div>`;
+            }
+            let builds = grp.builds;
+            // 默认隐藏 ARM64；勾选「仅看 ARM64」时只保留 ARM64
+            builds = builds.filter((b) => (armOnly ? /arm/i.test(b.arch) : !/arm/i.test(b.arch)));
+            if (query) {
+              const q = query;
+              builds = builds.filter((b) =>
+                `${b.title} ${b.build} ${b.arch} ${grp.label}`.toLowerCase().includes(q)
+              );
+            }
+            // 每个分类按添加日期倒序，仅保留最近 5 个新版本
+            builds = builds
+              .slice()
+              .sort((a, b) => toTime(b.date) - toTime(a.date))
+              .slice(0, 5);
+            total += builds.length;
+            if (!builds.length) {
+              return `<div class="group"><div class="group-head"><h2 class="group-title">${esc(grp.label)}</h2><span class="group-count">0</span></div><div class="card card-empty"><div class="empty">暂无可用版本</div></div></div>`;
+            }
+            return `<div class="group"><div class="group-head"><h2 class="group-title">${esc(grp.label)}</h2><span class="group-count">${builds.length}</span></div><div class="uup-list">${builds.map(uupItemHtml).join("")}</div></div>`;
+          })
+          .join("");
+        return { body: blocks, total };
+      }
+
+      /** 对一组 LoadResult 做：ARM64 过滤 → 搜索过滤 → 按分组归类 → 每组按日期倒序取最近 5 个 */
+      function buildGroups(results: LoadResult[]): { body: string; total: number } {
+        let items = results.filter((r) =>
+          armOnly ? r.arch === "arm64" : r.arch !== "arm64"
+        );
+        if (query) items = items.filter((r) => haystack(r).includes(query));
+
+        const byGroup = new Map<string, LoadResult[]>();
+        for (const r of items) {
+          if (!byGroup.has(r.group)) byGroup.set(r.group, []);
+          byGroup.get(r.group)!.push(r);
+        }
+
+        let total = 0;
+        const blocks = [...byGroup.entries()].map(([g, rs]) => {
+          // 每个分组按构建日期倒序，仅保留最近 5 个新版本
+          rs.sort((a, b) => toTime(b.card?.date) - toTime(a.card?.date));
+          const top = rs.slice(0, 5);
+          total += top.length;
+          const cards = top.map((r) => (r.card ? cardHtml(r.card) : emptyHtml(r.label)));
+          return groupHtml(g, cards);
+        });
+        return { body: blocks.join(""), total };
+      }
+
+      function render() {
+        // 修改版系统
+        const ng = buildGroups(data.nightly as LoadResult[]);
+        grids.nightly.innerHTML = ng.body || noResults();
+
+        // 原版系统
+        const mg = buildGroups(data.msupdate as LoadResult[]);
+        grids.msupdate.innerHTML = mg.body || noResults();
+
+        // UUP 版本
+        const uup = renderUUP();
+        grids.uup.innerHTML = uup.body || noResults();
+
+        $("#cntNightly").textContent = String(ng.total);
+        $("#cntMsupdate").textContent = String(mg.total);
+        $("#cntUup").textContent = String(uup.total);
+      }
+
+      function setTab(tab: "nightly" | "msupdate" | "uup") {
+        activeTab = tab;
+        document.querySelectorAll<HTMLButtonElement>(".tab").forEach((el) => {
+          el.classList.toggle("active", el.dataset.tab === tab);
+        });
+        grids.nightly.hidden = tab !== "nightly";
+        grids.msupdate.hidden = tab !== "msupdate";
+        grids.uup.hidden = tab !== "uup";
+      }
+
+      document.querySelectorAll<HTMLButtonElement>(".tab").forEach((el) => {
+        el.addEventListener("click", () => setTab(el.dataset.tab as "nightly" | "msupdate" | "uup"));
+      });
+
+      $("#search").addEventListener("input", (e) => {
+        query = (e.target as HTMLInputElement).value.trim().toLowerCase();
+        render();
+      });
+
+      $("#archArm").addEventListener("change", (e) => {
+        armOnly = (e.target as HTMLInputElement).checked;
+        render();
+      });
+
+      // 哈希一键复制（事件委托，避免重渲染后失效）
+      document.addEventListener("click", (e) => {
+        const t = e.target as HTMLElement;
+        const v = t.getAttribute?.("data-copy");
+        if (v && navigator.clipboard) {
+          navigator.clipboard.writeText(v).then(() => {
+            const old = t.textContent;
+            t.textContent = "已复制";
+            setTimeout(() => (t.textContent = old), 1000);
+          });
+        }
+      });
+
+      render();
+      setTab("nightly");
+    </script>
+  </body>
+</html>

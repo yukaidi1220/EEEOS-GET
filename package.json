@@ -1,0 +1,17 @@
+{
+  "name": "EEEOS-GET",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "鹅鹅鹅系统 / 原版系统构建分发展示页（数据来自 OpenList 元数据 JSON）",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "node scripts/guard.mjs && astro build",
+    "preview": "astro preview",
+    "check": "astro check"
+  },
+  "dependencies": {
+    "astro": "^5.13.0"
+  }
+}
