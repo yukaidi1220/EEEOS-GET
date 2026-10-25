@@ -1,0 +1,37 @@
+# 防 60 天自动禁用：GitHub 会在仓库连续 60 天无 push 后自动停用所有定时工作流
+# （本仓 deploy.yml 曾于 2026-09-20 因此被禁）。每周检查一次，最后提交超过 45 天
+# 就推一个空提交重置时钟——keepalive 自身也是定时任务，形成自持。
+name: Keepalive
+
+on:
+  schedule:
+    - cron: "17 3 * * 1" # 每周一 03:17 UTC（冷门时段）
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  keepalive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检查并保活
+        run: |
+          set -eu
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git clone --quiet "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" repo
+          cd repo
+          last=$(git log -1 --format=%ct)
+          now=$(date +%s)
+          age=$(( (now - last) / 86400 ))
+          echo "最后提交距今 ${age} 天"
+          if [ "$age" -lt 45 ]; then
+            echo "未满 45 天，无需保活"
+            exit 0
+          fi
+          git commit --allow-empty -m "chore: keepalive (reset 60-day inactivity clock)"
+          git push origin HEAD
+          echo "已推送空提交"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
