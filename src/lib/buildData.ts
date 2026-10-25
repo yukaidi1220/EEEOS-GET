@@ -85,16 +85,35 @@ export async function collectData(): Promise<SiteData> {
 }
 
 /** 判断是否为真正的 Windows 操作系统「版本」构建（如 "Windows 11, version 26H1 (28000.2525)"）。
- *  排除 .NET Framework / OOBE / Preview Update / Security Update 等非版本更新——
- *  这些虽带 28000.x 编号，但并非系统版本本体（如 28000.2605 仅是 Preview Update，28000.9340 仅是 .NET 更新）。 */
+ *  uupdump 分类页混有大量「刷版本号」的更新包（revision 上跳而已，并非完整系统构建），实测确认的形态：
+ *  - "Cumulative Update for Windows 10 Version 22H2 (19045.7807) amd64" —— 月度累积更新，
+ *    2026-10 实测它比同号的 Feature update 更晚上架，会赢得「最新版」比对并把链接指到 CU 下载页
+ *  - "Cumulative Update Preview for Windows 11 Version 22H2 (...)" —— 注意词序是 "Update Preview"，
+ *    单靠 "preview update" 关键字挡不住
+ *  - "Update for Windows 11 (26200.8894) amd64" —— 零星热修
+ *  - "Cumulative Update for Windows CPC OS (10.0.26200.9711) (26200.9711) amd64" —— CPC OS 累积更新
+ *  以及既有的 .NET Framework / OOBE / Preview Update / Security Update / Servicing Stack 等已知噪音。
+ *  而完整系统构建的标题实测只会以 "Windows <数字>"（如 "Windows 11, version 26H1"、"Windows 11 (22000.3260)"、
+ *  "Windows 11 24H2 with Update (26100.1742)"、Insider Preview 构建）或 "Feature update ..."
+ *  （如 "Feature update to Windows 10, version 22H2"，注意 "Feature update for Windows CPC OS"
+ *  这类同号镜像条目也是完整系统构建）开头，
+ *  故采用「黑名单关键字 + 白名单开头」双重过滤，兜住未来未知命名的更新包。 */
 export function isOsBuild(b: UUPBuild): boolean {
   const t = b.title.toLowerCase();
-  return (
-    !t.includes(".net framework") &&
-    !t.includes("oobe") &&
-    !t.includes("preview update") &&
-    !t.includes("security update")
-  );
+  // 黑名单：确认为更新包（非系统本体）的标题关键字。
+  // 注意不能用 "update for windows" 这种子串：会误伤 "Feature update for Windows CPC OS"（真实系统构建）。
+  if (
+    t.includes(".net framework") ||
+    t.includes("oobe") ||
+    t.includes("preview update") ||
+    t.includes("security update") ||
+    t.includes("cumulative update")
+  ) {
+    return false;
+  }
+  // 白名单："Update for Windows ..." / "Servicing/Setup/Dynamic ... Update ..." 等更新包
+  // 都不以这两种形态开头，在这里被挡掉
+  return /^windows \d+/.test(t) || /^feature update/.test(t);
 }
 
 /** 按「点分数字」比较两个构建号（如 28000.2525 vs 28000.9340），返回 -1/0/1 */
