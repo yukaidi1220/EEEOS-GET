@@ -55,7 +55,7 @@ function archFromFile(file: string): string {
 
 /** 对外元数据地址 */
 export function nightlyUrl(file: string): string {
-  return `${SITE.base}/zhipin/System/Nightly/${file}.json`;
+  return `${SITE.base}/cr/qzy-hk/System/Nightly/${file}.json`;
 }
 export function msupdateUrl(ch: MSUpdateChannel): string {
   return `${SITE.base}/mupan/System_MSUpdate/${ch.os_ver}/${ch.release}/latest_${ch.arch}.json`;
