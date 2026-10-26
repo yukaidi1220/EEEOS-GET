@@ -5,6 +5,7 @@
 
 import { loadNightly, loadMSUpdate, type LoadResult } from "./sources";
 import { detectAllUUP } from "./uup";
+import { fetchWithRetry } from "./fetch";
 
 export interface UUPBuild {
   /** uupdump 构建 UUID */
@@ -61,6 +62,32 @@ async function collectDataUncached(): Promise<SiteData> {
       return [] as UUPGroup[];
     }),
   ]);
+
+  // 测试视频存在性校验：指针里的 sys.video 是 maker 构建时预先写死的，
+  // 但视频要等 boot-test 跑完才上传——构建早于测试完成时该链接必然 404。
+  // 构建期逐个探测，只保留真实存在的，避免前端出现死链按钮。
+  // 注意两点：
+  //   1) OpenList 不支持 HEAD（对已存在文件也返回 404），必须用 GET + Range 取首字节；
+  //   2) fetchWithRetry 对 404 会抛 FetchError（非 2xx 视为失败），所以"抛异常=不存在"。
+  await Promise.all(
+    nightly.map(async (r) => {
+      const u = r.card?.videoUrl;
+      if (!u || !r.card) return;
+      try {
+        // 跟随重定向：OpenList 302 → Cloudreve 签名直链 → 200。
+        // 存在=成功返回；不存在=404 抛 FetchError → 走 catch 隐藏。
+        await fetchWithRetry(u, {
+          method: "GET",
+          headers: { Range: "bytes=0-0" },
+          retries: 0, // 探测不重试，避免拖慢构建
+          timeout: 15000,
+        });
+      } catch (e) {
+        console.warn(`[build] 视频不存在或不可访问，隐藏：${u}（${(e as Error)?.message ?? e}）`);
+        r.card.videoUrl = undefined;
+      }
+    })
+  );
 
   // 原版系统 ↔ UUP 最新版本比对：
   // 若 UUP 同一分类（同架构优先）中存在比本构建更大的构建号，说明原版系统版本已落后，标记 outdated。
