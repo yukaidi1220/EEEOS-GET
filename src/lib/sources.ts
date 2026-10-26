@@ -100,7 +100,8 @@ export function normalizeNightly(raw: any, ch: NightlyChannel): BuildCard {
 
 export function normalizeMSUpdate(raw: any, ch: MSUpdateChannel): BuildCard {
   const h = raw?.hash ?? {};
-  const dl = `${SITE.base}/cr/qzy-hk-mupan/System_MSUpdate/${ch.os_ver}/${ch.release}/${raw.os_version}/${raw.name}`;
+  // 走 gslb 聚合层（mupan 挂载点），与 nightly 的 zhipin 路径保持一致的访问方式
+  const dl = `${SITE.base}/mupan/System_MSUpdate/${ch.os_ver}/${ch.release}/${raw.os_version}/${raw.name}`;
   return {
     type: "msupdate",
     name: raw.os_display ?? ch.label ?? raw.name,
