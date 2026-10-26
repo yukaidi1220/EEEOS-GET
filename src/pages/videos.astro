@@ -66,6 +66,18 @@ const builtAtText = formatBeijingInstant(data.builtAt);
         );
       }
 
+      // 视频文件名含中文（_测试视频.mp4），浏览器直接请求前必须对路径做 percent-encode，
+      // 否则 Cloudreve 侧拿到的 URL 编码不一致会 404。只编码路径，保留协议与分隔符。
+      function encodeUrl(u: string): string {
+        try {
+          const url = new URL(u);
+          url.pathname = url.pathname.split("/").map(encodeURIComponent).join("/");
+          return url.toString();
+        } catch {
+          return u;
+        }
+      }
+
       // 收集所有带视频的构建，按日期倒序（最新的在前）
       const items = (data.nightly ?? [])
         .filter((r) => r.card?.videoUrl)
@@ -88,12 +100,12 @@ const builtAtText = formatBeijingInstant(data.builtAt);
               <span class="badge badge-nightly">${esc(group ?? "修改版")}</span>
             </div>
             <video class="test-video" controls preload="none" playsinline
-                   src="${esc(card.videoUrl!)}"></video>
+                   src="${esc(encodeUrl(card.videoUrl!))}"></video>
             <dl class="card-info">
               <div><dt>构建日期</dt><dd>${esc(card.date || "—")}</dd></div>
               <div><dt>构建号</dt><dd>${esc(card.osVersion || "—")}</dd></div>
             </dl>
-            <a class="dl" href="${esc(card.videoUrl!)}" target="_blank" rel="noopener">下载视频</a>
+            <a class="dl" href="${esc(encodeUrl(card.videoUrl!))}" target="_blank" rel="noopener">下载视频</a>
           </article>`
           )
           .join("");
