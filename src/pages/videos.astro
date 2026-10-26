@@ -1,0 +1,121 @@
+---
+import "../styles/global.css";
+import { SITE } from "../config";
+import { collectData } from "../lib/buildData";
+import { formatBeijingInstant } from "../lib/format";
+
+const year = new Date().getFullYear();
+const data = await collectData();
+const builtAtText = formatBeijingInstant(data.builtAt);
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>开机测试视频 · {SITE.title}</title>
+    <meta name="description" content="EEEOS 镜像 QEMU 自动开机测试录像" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="hero">
+        <div class="hero-inner">
+          <h1 class="hero-title">开机测试视频</h1>
+          <p class="hero-sub">QEMU 自动开机测试录像 · 每 3 秒截图去重后以 5fps 合成的 H.265 视频</p>
+        </div>
+      </header>
+
+      <main class="wrap">
+        <p class="updated">
+          <a href="/">← 返回下载页</a> · 数据构建于 {builtAtText}
+        </p>
+        <section id="videoGrid" class="groups"></section>
+        <div class="hint">
+          视频由 nightly 构建后自动执行的镜像开机测试产出（建盘 → 释放镜像 → 开机 → 部署到桌面）。
+          仅测试通过（绿局）的构建才有录像；同一构建只保留最新一次测试。
+        </div>
+      </main>
+
+      <footer class="foot">
+        <span>© {year} {SITE.title}</span>
+        {SITE.repo && (<><span class="foot-sep">·</span><a href={SITE.repo} target="_blank" rel="noopener">仓库</a></>)}
+      </footer>
+    </div>
+
+    <script define:vars={{ INITIAL_DATA: data }} is:inline>
+      window.__INITIAL_DATA__ = INITIAL_DATA;
+    </script>
+
+    <script>
+      import type { SiteData } from "../lib/buildData";
+
+      declare global {
+        interface Window {
+          __INITIAL_DATA__?: SiteData;
+        }
+      }
+
+      const $ = <T extends HTMLElement = HTMLElement>(s: string) => document.querySelector<T>(s)!;
+      const data = window.__INITIAL_DATA__!;
+      const grid = $("#videoGrid") as HTMLElement;
+
+      function esc(s: string): string {
+        return (s ?? "").replace(/[&<>"']/g, (c) =>
+          ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c] as string)
+        );
+      }
+
+      // 收集所有带视频的构建，按日期倒序（最新的在前）
+      const items = (data.nightly ?? [])
+        .filter((r) => r.card?.videoUrl)
+        .map((r) => ({ card: r.card!, group: r.group }))
+        .sort((a, b) => (b.card.date ?? "").localeCompare(a.card.date ?? ""));
+
+      if (items.length === 0) {
+        grid.innerHTML = `
+          <div class="card card-empty">
+            <div class="empty">暂无测试视频</div>
+            <div class="empty-sub">等待下一次开机测试产出录像</div>
+          </div>`;
+      } else {
+        const cards = items
+          .map(
+            ({ card, group }) => `
+          <article class="card">
+            <div class="card-head">
+              <h3 class="card-title">${esc(card.name)}</h3>
+              <span class="badge badge-nightly">${esc(group ?? "修改版")}</span>
+            </div>
+            <video class="test-video" controls preload="none" playsinline
+                   src="${esc(card.videoUrl!)}"></video>
+            <dl class="card-info">
+              <div><dt>构建日期</dt><dd>${esc(card.date || "—")}</dd></div>
+              <div><dt>构建号</dt><dd>${esc(card.osVersion || "—")}</dd></div>
+            </dl>
+            <a class="dl" href="${esc(card.videoUrl!)}" target="_blank" rel="noopener">下载视频</a>
+          </article>`
+          )
+          .join("");
+        grid.innerHTML = `
+          <div class="group">
+            <div class="group-head">
+              <h2 class="group-title">测试通过的构建</h2>
+              <span class="group-count">${items.length}</span>
+            </div>
+            <div class="grid">${cards}</div>
+          </div>`;
+      }
+    </script>
+
+    <style>
+      .test-video {
+        width: 100%;
+        aspect-ratio: 16 / 10;
+        background: #000;
+        border-radius: 6px;
+        margin: 8px 0 12px;
+      }
+    </style>
+  </body>
+</html>

@@ -16,6 +16,8 @@ export interface BuildCard {
   sha256?: string;
   md5?: string;
   downloadUrl: string;
+  /** 开机测试视频（image-boot-test 绿局产出，未产出时为空） */
+  videoUrl?: string;
   note?: string;
 }
 
@@ -91,6 +93,7 @@ export function normalizeNightly(raw: any, ch: NightlyChannel): BuildCard {
     sha256: sys.sha256,
     md5: sys.md5,
     downloadUrl: sys.url ?? "",
+    videoUrl: sys.video || undefined,
     note: os.index ? `镜像索引 #${os.index}` : undefined,
   };
 }
