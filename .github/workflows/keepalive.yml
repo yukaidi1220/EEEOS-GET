@@ -18,10 +18,12 @@ jobs:
       - name: 检查并保活
         run: |
           set -eu
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # 必须先 clone 再 config：在 clone 之前执行 git config 会因"不在 git 目录"报
+          # fatal: not in a git directory（2026-10-26 实测失败）
           git clone --quiet "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" repo
           cd repo
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           last=$(git log -1 --format=%ct)
           now=$(date +%s)
           age=$(( (now - last) / 86400 ))
