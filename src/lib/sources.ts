@@ -55,12 +55,12 @@ function archFromFile(file: string): string {
   return "x64";
 }
 
-/** 对外元数据地址 */
+/** 对外元数据地址（走 /d/gslb 聚合：zhipin=修改版、mupan=原版） */
 export function nightlyUrl(file: string): string {
-  return `${SITE.base}/cr/qzy-hk/System/Nightly/${file}.json`;
+  return `${SITE.base}/zhipin/System/Nightly/${file}.json`;
 }
 export function msupdateUrl(ch: MSUpdateChannel): string {
-  return `${SITE.base}/cr/qzy-hk-mupan/System_MSUpdate/${ch.os_ver}/${ch.release}/latest_${ch.arch}.json`;
+  return `${SITE.base}/mupan/System_MSUpdate/${ch.os_ver}/${ch.release}/latest_${ch.arch}.json`;
 }
 
 async function fetchJson(url: string): Promise<any> {

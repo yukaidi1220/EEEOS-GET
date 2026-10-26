@@ -43,7 +43,9 @@ export interface MSUpdateChannel {
 }
 
 export const SITE = {
-  /** OpenList 根，注意结尾无斜杠 */
+  /** OpenList 根，注意结尾无斜杠。
+   *  2026-10-26：走 /d/gslb 聚合（zhipin / mupan 两个挂载点），实测正常。
+   *  注意 /d/gslb/cr 是另一条无效路径（返回 500），不要用。 */
   base: "https://res.yukaidi.top/d/gslb",
   title: "鹅鹅鹅系统 · 构建分发",
   subtitle: "修改版系统 & 原版集成更新系统 · 最新构建",
