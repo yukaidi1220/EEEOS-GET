@@ -39,7 +39,14 @@ export interface SiteData {
   builtAt: string;
 }
 
+/** 模块级缓存：多页面（index/videos）共享同一次构建期拉取，避免 UUP 探测链路翻倍 */
+let _cache: Promise<SiteData> | null = null;
+
 export async function collectData(): Promise<SiteData> {
+  return (_cache ??= collectDataUncached());
+}
+
+async function collectDataUncached(): Promise<SiteData> {
   const [nightly, msupdate, uup] = await Promise.all([
     loadNightly().catch((e) => {
       console.error("[build] nightly 加载失败：", e);
