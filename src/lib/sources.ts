@@ -41,6 +41,7 @@ export interface LoadResult {
 const MS_TO_UUP: Record<string, string> = {
   "11-26H1": "w11-26h1",
   "11-25H2": "w11-25h2",
+  "11-26H2": "w11-26h2",
   "11-24H2": "w11-24h2",
   "11-23H2": "w11-23h2",
   "11-21H2": "w11-21h2",

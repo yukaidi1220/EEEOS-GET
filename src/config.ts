@@ -90,6 +90,8 @@ export const MSUPDATE: MSUpdateChannel[] = [
   { os_ver: "11", release: "26H1", arch: "arm64", group: "Windows 11 消费版" },
   { os_ver: "11", release: "25H2", arch: "x64", group: "Windows 11 消费版" },
   { os_ver: "11", release: "25H2", arch: "arm64", group: "Windows 11 消费版" },
+  { os_ver: "11", release: "26H2", arch: "x64", group: "Windows 11 消费版" },
+  { os_ver: "11", release: "26H2", arch: "arm64", group: "Windows 11 消费版" },
   { os_ver: "11", release: "24H2", arch: "x64", group: "Windows 11 消费版" },
   { os_ver: "11", release: "23H2", arch: "x64", group: "Windows 11 消费版" },
   { os_ver: "11", release: "23H2", arch: "arm64", group: "Windows 11 消费版" },
@@ -119,6 +121,7 @@ export interface UUPCategory {
 export const UUP_CATEGORIES: UUPCategory[] = [
   { category: "w11-26h1", label: "Windows 11 26H1" },
   { category: "w11-25h2", label: "Windows 11 25H2" },
+  { category: "w11-26h2", label: "Windows 11 26H2" },
   { category: "w11-24h2", label: "Windows 11 24H2" },
   { category: "w11-23h2", label: "Windows 11 23H2" },
   { category: "w11-22h2", label: "Windows 11 22H2" },
