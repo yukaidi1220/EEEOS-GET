@@ -9,8 +9,6 @@ const year = new Date().getFullYear();
 const data = await collectData();
 // 构建时间（UTC 时间戳）统一转换为北京时间「YYYY-MM-DD HH:MM」
 const builtAtText = formatBeijingInstant(data.builtAt);
-// 仅当至少一个构建的指针里有测试视频时，才显示视频页入口
-const hasVideos = (data.nightly ?? []).some((r) => !!r.card?.videoUrl);
 ---
 
 <!doctype html>
@@ -27,7 +25,6 @@ const hasVideos = (data.nightly ?? []).some((r) => !!r.card?.videoUrl);
         <div class="hero-inner">
           <h1 class="hero-title">{SITE.title}</h1>
           <p class="hero-sub">{SITE.subtitle}</p>
-          {hasVideos && <p class="hero-sub"><a href="/videos" style="color:inherit;opacity:.85">▶ 开机测试视频</a></p>}
         </div>
       </header>
 
@@ -102,6 +99,15 @@ const hasVideos = (data.nightly ?? []).some((r) => !!r.card?.videoUrl);
       }
 
       /** 把日期串转为可排序的时间戳（按北京时间组件，跨运行时一致） */
+      // 视频/文件名可能含中文或特殊字符，URL 路径需 percent-encode。
+      // 不能用 new URL() 再 encodeURIComponent（会双重编码成 %25），直接按 / 分段编码。
+      function encodeUrl(u: string): string {
+        const i = u.indexOf("://");
+        if (i < 0) return u;
+        const scheme = u.slice(0, i + 3);
+        return scheme + u.slice(i + 3).split("/").map(encodeURIComponent).join("/");
+      }
+
       function toTime(s: string | undefined): number {
         return toBeijingMs(s);
       }
@@ -145,6 +151,16 @@ const hasVideos = (data.nightly ?? []).some((r) => !!r.card?.videoUrl);
             }</div>`
           : "";
 
+        // 开机测试视频：与下载按钮放在同一张卡片里，用户下载前就能看到实机开机验证。
+        // 默认收起（只显示一行「▶ 查看开机测试视频」），点击展开再加载视频，避免首屏拖慢。
+        const video = c.videoUrl
+          ? `<details class="card-video">
+              <summary>▶ 查看开机测试视频（QEMU 实机开机验证）</summary>
+              <video controls preload="none" playsinline src="${esc(encodeUrl(c.videoUrl))}"></video>
+              <a class="video-dl" href="${esc(encodeUrl(c.videoUrl))}" target="_blank" rel="noopener">下载视频</a>
+            </details>`
+          : "";
+
         return `
           <article class="card">
             <div class="card-head">
@@ -157,6 +173,7 @@ const hasVideos = (data.nightly ?? []).some((r) => !!r.card?.videoUrl);
               <div><dt>日期</dt><dd>${esc(c.date || "—")}</dd></div>
               <div><dt>大小</dt><dd>${esc(c.sizeText || "—")}</dd></div>
             </dl>
+            ${video}
             ${hash ? `<div class="hash">${hash}</div>` : ""}
             <a class="dl" href="${esc(c.downloadUrl)}" target="_blank" rel="noopener">下载</a>
           </article>`;
