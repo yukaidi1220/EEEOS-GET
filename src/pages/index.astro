@@ -152,11 +152,19 @@ const builtAtText = formatBeijingInstant(data.builtAt);
           : "";
 
         // 开机测试视频：与下载按钮放在同一张卡片里，用户下载前就能看到实机开机验证。
-        // 默认收起（只显示一行「▶ 查看开机测试视频」），点击展开再加载视频，避免首屏拖慢。
+        // 默认收起（summary 只有一行），点击展开再加载视频，避免首屏拖慢。
+        // 三角由 CSS 的 summary::before 画（展开转朝下）；文本里不写死 ▶，
+        // 否则和浏览器自带的 disclosure 三角叠成两个（2026-10-27 用户反馈）。
+        // 摘要带版本名、正文带 MD5 前 8 位：视频文件名与镜像同基名（含同一 MD5），
+        // 用户据此能核对"这条视频测的就是本卡这一版"，而不是一条来路不明的公共视频。
+        const md5Short = c.md5 ? c.md5.slice(0, 8) : "";
         const video = c.videoUrl
           ? `<details class="card-video">
-              <summary>▶ 查看开机测试视频（QEMU 实机开机验证）</summary>
+              <summary>查看开机测试视频<span class="video-edition">${esc(c.name)}</span></summary>
               <video controls preload="none" playsinline src="${esc(encodeUrl(c.videoUrl))}"></video>
+              <div class="video-cap">QEMU 实机开机验证 · 与本卡镜像同一次构建${
+                md5Short ? `（MD5 前 8 位 ${esc(md5Short)}，与下方校验值一致）` : ""
+              }</div>
               <a class="video-dl" href="${esc(encodeUrl(c.videoUrl))}" target="_blank" rel="noopener">下载视频</a>
             </details>`
           : "";

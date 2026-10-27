@@ -343,6 +343,30 @@ body {
   color: var(--accent, #0d9488);
   background: #f6f9f9;
   user-select: none;
+  /* 浏览器会在 <summary> 前自动画一个 disclosure 三角，不关掉就和界面自己的
+     三角叠成两个（收起时两个都朝右、展开时只有自带的那个转向下——2026-10-27 反馈） */
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.card-video summary::-webkit-details-marker { display: none; }
+/* 唯一的三角：收起朝右，展开转朝下 */
+.card-video summary::before {
+  content: "▶";
+  font-size: 10px;
+  line-height: 1;
+  transition: transform 0.15s ease;
+}
+.card-video[open] summary::before { transform: rotate(90deg); }
+.card-video .video-edition { color: var(--muted, #667); font-weight: 400; }
+.card-video .video-cap {
+  padding: 6px 12px;
+  font-size: 12px;
+  color: var(--muted, #667);
+  background: #fafcfc;
+  border-top: 1px solid var(--line, #e3e8ea);
 }
 .card-video summary:hover { background: #eef4f4; }
 .card-video video {
