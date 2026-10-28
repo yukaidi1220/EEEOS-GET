@@ -211,13 +211,13 @@ const builtAtText = formatBeijingInstant(data.builtAt);
           ].filter(Boolean).join("");
           const video = c.videoUrl
             ? `<details class="card-video">
-                 <summary>▶ 查看开机测试视频（QEMU 实机开机验证）</summary>
+                 <summary>查看开机测试视频（QEMU 实机开机验证）</summary>
                  <video controls preload="none" playsinline src="${esc(encodeUrl(c.videoUrl))}"></video>
                  <a class="video-dl" href="${esc(encodeUrl(c.videoUrl))}" target="_blank" rel="noopener">下载视频</a>
                </details>`
             : "";
           return `
-            <details class="variant" ${i === 0 ? "open" : ""}>
+            <details class="variant">
               <summary>
                 <span class="variant-name">${esc(c.variant || "标准版")}</span>
                 <span class="variant-meta">${esc(c.date || "—")} · ${esc(c.sizeText || "—")}</span>
@@ -237,7 +237,7 @@ const builtAtText = formatBeijingInstant(data.builtAt);
           ].filter(Boolean).join("");
           const video = c.videoUrl
             ? `<details class="card-video">
-                 <summary>▶ 查看开机测试视频（QEMU 实机开机验证）</summary>
+                 <summary>查看开机测试视频（QEMU 实机开机验证）</summary>
                  <video controls preload="none" playsinline src="${esc(encodeUrl(c.videoUrl))}"></video>
                  <a class="video-dl" href="${esc(encodeUrl(c.videoUrl))}" target="_blank" rel="noopener">下载视频</a>
                </details>`
