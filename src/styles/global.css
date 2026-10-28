@@ -474,19 +474,17 @@ summary::marker { content: ""; }
   transition: background 0.15s ease;
 }
 .hash-row:hover { background: #f4f8f8; }
-/* 哈希值可横向滑动查看完整内容（之前用省略号永远看不全） */
+/* 哈希值可横向滑动查看完整内容（之前用省略号永远看不全）。
+   滚动条隐藏：卡片里出现滚动条太丑（2026-10-28 反馈），保持可滑动但不显示。 */
 .hash-row .hash-val {
   overflow-x: auto;
   white-space: nowrap;
   flex: 1 1 auto;
   min-width: 0;
-  scrollbar-width: thin;
+  scrollbar-width: none;          /* Firefox */
+  -ms-overflow-style: none;       /* 旧 Edge */
 }
-.hash-row .hash-val::-webkit-scrollbar { height: 4px; }
-.hash-row .hash-val::-webkit-scrollbar-thumb {
-  background: #d3dcde;
-  border-radius: 2px;
-}
+.hash-row .hash-val::-webkit-scrollbar { display: none; }  /* Chrome/Safari */
 /* 复制提示文字（原按钮改为行内提示） */
 .copy-hint {
   flex: 0 0 auto;
