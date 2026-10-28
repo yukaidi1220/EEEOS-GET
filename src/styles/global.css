@@ -464,7 +464,7 @@ summary::marker { content: ""; }
 }
 .hash-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   /* 整行可点击复制（2026-10-28 需求） */
   cursor: pointer;
@@ -474,20 +474,21 @@ summary::marker { content: ""; }
   transition: background 0.15s ease;
 }
 .hash-row:hover { background: #f4f8f8; }
-/* 哈希值可横向滑动查看完整内容（之前用省略号永远看不全）。
-   滚动条隐藏：卡片里出现滚动条太丑（2026-10-28 反馈），保持可滑动但不显示。 */
+/* 哈希值完整显示：折行而不是滚动（滚动条丑、且用户不会去滚——2026-10-28 反馈）。
+   base 规则里有 text-overflow: ellipsis，必须显式覆盖，否则仍会被吃成省略号。 */
 .hash-row .hash-val {
-  overflow-x: auto;
-  white-space: nowrap;
+  overflow: visible;
+  text-overflow: clip;
+  white-space: normal;
+  word-break: break-all;
+  line-height: 1.45;
   flex: 1 1 auto;
   min-width: 0;
-  scrollbar-width: none;          /* Firefox */
-  -ms-overflow-style: none;       /* 旧 Edge */
 }
-.hash-row .hash-val::-webkit-scrollbar { display: none; }  /* Chrome/Safari */
 /* 复制提示文字（原按钮改为行内提示） */
 .copy-hint {
   flex: 0 0 auto;
+  margin-top: 1px;
   font-size: 12px;
   color: var(--muted, #667);
   border: 1px solid var(--border, #e3e8ea);
