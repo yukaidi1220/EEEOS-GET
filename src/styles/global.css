@@ -336,12 +336,18 @@ summary::-webkit-details-marker { display: none; }
 summary::marker { content: ""; }
 
 /* 变体区块（网卡驱动版 / 全驱动版）：同一版本卡片内的可展开分组 */
+/* 变体容器：卡片里的 flex gap 会额外撑开间距，这里收拢成紧凑列表 */
+.variants {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: -2px;
+}
 .variant {
   border-top: 1px solid var(--line, #e3e8ea);
-  margin-top: 10px;
-  padding-top: 6px;
+  padding: 2px 0;
 }
-.variant:first-of-type { border-top: none; margin-top: 0; padding-top: 0; }
+.variant:first-of-type { border-top: none; padding-top: 0; }
 .variant > summary {
   cursor: pointer;
   display: flex;
@@ -460,7 +466,39 @@ summary::marker { content: ""; }
   display: flex;
   align-items: center;
   gap: 8px;
+  /* 整行可点击复制（2026-10-28 需求） */
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+  transition: background 0.15s ease;
 }
+.hash-row:hover { background: #f4f8f8; }
+/* 哈希值可横向滑动查看完整内容（之前用省略号永远看不全） */
+.hash-row .hash-val {
+  overflow-x: auto;
+  white-space: nowrap;
+  flex: 1 1 auto;
+  min-width: 0;
+  scrollbar-width: thin;
+}
+.hash-row .hash-val::-webkit-scrollbar { height: 4px; }
+.hash-row .hash-val::-webkit-scrollbar-thumb {
+  background: #d3dcde;
+  border-radius: 2px;
+}
+/* 复制提示文字（原按钮改为行内提示） */
+.copy-hint {
+  flex: 0 0 auto;
+  font-size: 12px;
+  color: var(--muted, #667);
+  border: 1px solid var(--border, #e3e8ea);
+  border-radius: 6px;
+  padding: 2px 8px;
+  background: #fff;
+  user-select: none;
+}
+.hash-row:hover .copy-hint { color: var(--accent, #0d9488); border-color: var(--accent, #0d9488); }
 .hash-label {
   flex: none;
   width: 52px;

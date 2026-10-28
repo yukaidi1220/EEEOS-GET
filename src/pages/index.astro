@@ -126,9 +126,9 @@ const builtAtText = formatBeijingInstant(data.builtAt);
             : `<span class="badge badge-msupdate">原版</span>`;
         const hash = [
           c.sha256 &&
-            `<div class="hash-row"><span class="hash-label">SHA256</span><span class="hash-val">${esc(c.sha256)}</span><button class="copy" data-copy="${esc(c.sha256)}">复制</button></div>`,
+            `<div class="hash-row" data-copy="${esc(c.sha256)}" title="点击复制"><span class="hash-label">SHA256</span><span class="hash-val">${esc(c.sha256)}</span><span class="copy-hint">复制</span></div>`,
           c.md5 &&
-            `<div class="hash-row"><span class="hash-label">MD5</span><span class="hash-val">${esc(c.md5)}</span><button class="copy" data-copy="${esc(c.md5)}">复制</button></div>`,
+            `<div class="hash-row" data-copy="${esc(c.md5)}" title="点击复制"><span class="hash-label">MD5</span><span class="hash-val">${esc(c.md5)}</span><span class="copy-hint">复制</span></div>`,
         ]
           .filter(Boolean)
           .join("");
@@ -206,8 +206,8 @@ const builtAtText = formatBeijingInstant(data.builtAt);
         const variants = sorted.map((r, i) => {
           const c = r.card!;
           const hash = [
-            c.sha256 && `<div class="hash-row"><span class="hash-label">SHA256</span><span class="hash-val">${esc(c.sha256)}</span><button class="copy" data-copy="${esc(c.sha256)}">复制</button></div>`,
-            c.md5 && `<div class="hash-row"><span class="hash-label">MD5</span><span class="hash-val">${esc(c.md5)}</span><button class="copy" data-copy="${esc(c.md5)}">复制</button></div>`,
+            c.sha256 && `<div class="hash-row" data-copy="${esc(c.sha256)}" title="点击复制"><span class="hash-label">SHA256</span><span class="hash-val">${esc(c.sha256)}</span><span class="copy-hint">复制</span></div>`,
+            c.md5 && `<div class="hash-row" data-copy="${esc(c.md5)}" title="点击复制"><span class="hash-label">MD5</span><span class="hash-val">${esc(c.md5)}</span><span class="copy-hint">复制</span></div>`,
           ].filter(Boolean).join("");
           const video = c.videoUrl
             ? `<details class="card-video">
@@ -232,8 +232,8 @@ const builtAtText = formatBeijingInstant(data.builtAt);
         if (sorted.length <= 1) {
           const c = sorted[0]?.card ?? first;
           const hash = [
-            c.sha256 && `<div class="hash-row"><span class="hash-label">SHA256</span><span class="hash-val">${esc(c.sha256)}</span><button class="copy" data-copy="${esc(c.sha256)}">复制</button></div>`,
-            c.md5 && `<div class="hash-row"><span class="hash-label">MD5</span><span class="hash-val">${esc(c.md5)}</span><button class="copy" data-copy="${esc(c.md5)}">复制</button></div>`,
+            c.sha256 && `<div class="hash-row" data-copy="${esc(c.sha256)}" title="点击复制"><span class="hash-label">SHA256</span><span class="hash-val">${esc(c.sha256)}</span><span class="copy-hint">复制</span></div>`,
+            c.md5 && `<div class="hash-row" data-copy="${esc(c.md5)}" title="点击复制"><span class="hash-label">MD5</span><span class="hash-val">${esc(c.md5)}</span><span class="copy-hint">复制</span></div>`,
           ].filter(Boolean).join("");
           const video = c.videoUrl
             ? `<details class="card-video">
@@ -260,7 +260,7 @@ const builtAtText = formatBeijingInstant(data.builtAt);
           <article class="card">
             <div class="card-head"><h3 class="card-title">${esc(first.name)}</h3>${badge}</div>
             ${meta ? `<div class="card-meta">${meta}</div>` : ""}
-            ${variants}
+            <div class="variants">${variants}</div>
           </article>`;
       }
 
@@ -440,12 +440,17 @@ const builtAtText = formatBeijingInstant(data.builtAt);
       // 哈希一键复制（事件委托，避免重渲染后失效）
       document.addEventListener("click", (e) => {
         const t = e.target as HTMLElement;
-        const v = t.getAttribute?.("data-copy");
+        // 整行（含框内任意位置）都可点击复制：从点击点向上找最近的 data-copy
+        const box = t.closest?.("[data-copy]") as HTMLElement | null;
+        const v = box?.getAttribute("data-copy");
         if (v && navigator.clipboard) {
           navigator.clipboard.writeText(v).then(() => {
-            const old = t.textContent;
-            t.textContent = "已复制";
-            setTimeout(() => (t.textContent = old), 1000);
+            const hint = box!.querySelector<HTMLElement>(".copy-hint");
+            if (hint) {
+              const old = hint.textContent;
+              hint.textContent = "已复制";
+              setTimeout(() => (hint.textContent = old), 1200);
+            }
           });
         }
       });
