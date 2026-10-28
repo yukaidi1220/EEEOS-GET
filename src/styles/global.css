@@ -351,7 +351,7 @@ summary::marker { content: ""; }
 .variant > summary {
   cursor: pointer;
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 8px;
   padding: 6px 2px;
@@ -360,13 +360,16 @@ summary::marker { content: ""; }
 }
 .variant > summary::-webkit-details-marker { display: none; }
 .variant > summary::before {
-  content: "▸ ";
-  /* 外层三角要比内层视频条的大（2026-10-28 反馈） */
-  font-size: 13px;
+  /* 与内层视频条用同一个字形 "▶"，只靠字号拉开大小（此前外层用 "▸" 是小三角
+     字形本身偏小，调 font-size 也看不出差别——2026-10-28 反馈） */
+  content: "▶";
+  font-size: 11px;
+  line-height: 1;
+  flex: 0 0 auto;
   color: var(--accent, #0d9488);
   transition: transform .15s;
 }
-.variant[open] > summary::before { content: "▾ "; }
+.variant[open] > summary::before { transform: rotate(90deg); }
 .variant-name {
   font-weight: 600;
   color: var(--fg, #222);
@@ -418,8 +421,8 @@ summary::marker { content: ""; }
 /* 唯一的三角：收起朝右，展开转朝下 */
 .card-video summary::before {
   content: "▶";
-  /* 内层（视频条）三角比外层变体小 */
-  font-size: 8px;
+  /* 内层（视频条）三角比外层变体小：同字形，字号 7px < 外层 11px */
+  font-size: 7px;
   line-height: 1;
   transition: transform 0.15s ease;
 }
