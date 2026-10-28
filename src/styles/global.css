@@ -390,15 +390,17 @@ summary::marker { content: ""; }
 
 /* 卡片内嵌开机测试视频：默认收起，展开后显示播放器 */
 .card-video {
-  margin: 12px 0 0;
+  margin: 8px 0 0;
   border: 1px solid var(--line, #e3e8ea);
   border-radius: 8px;
   overflow: hidden;
 }
 .card-video summary {
   cursor: pointer;
-  padding: 8px 12px;
-  font-size: 13px;
+  /* 条太高（2026-10-28 反馈）：padding 8px→4px、字号 13→12px，行高压到 1.2 */
+  padding: 4px 10px;
+  font-size: 12px;
+  line-height: 1.2;
   color: var(--accent, #0d9488);
   background: #f6f9f9;
   user-select: none;
@@ -436,8 +438,8 @@ summary::marker { content: ""; }
 }
 .card-video .video-dl {
   display: block;
-  padding: 6px 12px;
-  font-size: 12px;
+  padding: 3px 10px;
+  font-size: 11.5px;
   text-align: right;
   color: var(--muted, #667);
   text-decoration: none;
