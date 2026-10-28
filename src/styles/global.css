@@ -361,6 +361,8 @@ summary::marker { content: ""; }
 .variant > summary::-webkit-details-marker { display: none; }
 .variant > summary::before {
   content: "▸ ";
+  /* 外层三角要比内层视频条的大（2026-10-28 反馈） */
+  font-size: 13px;
   color: var(--accent, #0d9488);
   transition: transform .15s;
 }
@@ -416,7 +418,8 @@ summary::marker { content: ""; }
 /* 唯一的三角：收起朝右，展开转朝下 */
 .card-video summary::before {
   content: "▶";
-  font-size: 10px;
+  /* 内层（视频条）三角比外层变体小 */
+  font-size: 8px;
   line-height: 1;
   transition: transform 0.15s ease;
 }
@@ -466,7 +469,7 @@ summary::marker { content: ""; }
 }
 .hash-row {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 8px;
   /* 整行可点击复制（2026-10-28 需求） */
   cursor: pointer;
@@ -476,21 +479,24 @@ summary::marker { content: ""; }
   transition: background 0.15s ease;
 }
 .hash-row:hover { background: #f4f8f8; }
-/* 哈希值完整显示：折行而不是滚动（滚动条丑、且用户不会去滚——2026-10-28 反馈）。
-   base 规则里有 text-overflow: ellipsis，必须显式覆盖，否则仍会被吃成省略号。 */
+/* 哈希值单行 + 横向滚动（不换行；2026-10-28 反馈：要滚动就别换行）。
+   base 有 text-overflow: ellipsis，必须覆盖成 clip，否则仍是省略号；滚动条隐藏。 */
 .hash-row .hash-val {
-  overflow: visible;
+  overflow-x: auto;
+  overflow-y: hidden;
   text-overflow: clip;
-  white-space: normal;
-  word-break: break-all;
+  white-space: nowrap;
+  word-break: normal;
   line-height: 1.45;
   flex: 1 1 auto;
   min-width: 0;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
+.hash-row .hash-val::-webkit-scrollbar { display: none; }
 /* 复制提示文字（原按钮改为行内提示） */
 .copy-hint {
   flex: 0 0 auto;
-  margin-top: 1px;
   font-size: 12px;
   color: var(--muted, #667);
   border: 1px solid var(--border, #e3e8ea);
