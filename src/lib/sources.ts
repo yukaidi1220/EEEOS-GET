@@ -18,6 +18,8 @@ export interface BuildCard {
   downloadUrl: string;
   /** 开机测试视频（image-boot-test 绿局产出，未产出时为空） */
   videoUrl?: string;
+  /** 构建变体名（网卡驱动版 / 全驱动版） */
+  variant?: string;
   note?: string;
 }
 
@@ -95,6 +97,7 @@ export function normalizeNightly(raw: any, ch: NightlyChannel): BuildCard {
     md5: sys.md5,
     downloadUrl: sys.url ?? "",
     videoUrl: sys.video || undefined,
+    variant: ch.variant,
     note: os.index ? `镜像索引 #${os.index}` : undefined,
   };
 }

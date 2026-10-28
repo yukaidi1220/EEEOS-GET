@@ -329,6 +329,44 @@ body {
   flex-direction: column;
   gap: 2px;
 }
+/* 变体区块（网卡驱动版 / 全驱动版）：同一版本卡片内的可展开分组 */
+.variant {
+  border-top: 1px solid var(--line, #e3e8ea);
+  margin-top: 10px;
+  padding-top: 6px;
+}
+.variant:first-of-type { border-top: none; margin-top: 0; padding-top: 0; }
+.variant > summary {
+  cursor: pointer;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 6px 2px;
+  font-size: 13px;
+  list-style: none;
+}
+.variant > summary::-webkit-details-marker { display: none; }
+.variant > summary::before {
+  content: "▸ ";
+  color: var(--accent, #0d9488);
+  transition: transform .15s;
+}
+.variant[open] > summary::before { content: "▾ "; }
+.variant-name {
+  font-weight: 600;
+  color: var(--fg, #222);
+  flex: 0 0 auto;
+}
+.variant-meta {
+  color: var(--muted, #667);
+  font-size: 12px;
+  margin-left: auto;
+  white-space: nowrap;
+}
+.variant .hash { margin-top: 8px; }
+.variant .dl { margin-top: 8px; }
+
 /* 卡片内嵌开机测试视频：默认收起，展开后显示播放器 */
 .card-video {
   margin: 12px 0 0;

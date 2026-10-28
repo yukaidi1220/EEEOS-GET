@@ -31,6 +31,9 @@ export interface NightlyChannel {
   group?: string;
   /** 版本小标签，如 专业版 / 企业版S / 旗舰版 */
   tag?: string;
+  /** 变体名（同一版本的多个构建变体，如 网卡驱动版 / 全驱动版）；前端按 file 去掉
+   *  _Net/_DrvCeo 后缀聚合成一张可展开卡片 */
+  variant?: string;
 }
 
 export interface MSUpdateChannel {
@@ -61,26 +64,35 @@ export const SITE = {
 
 // 修改版（鹅鹅鹅系统）：按 Windows 大版本 + 渠道分组
 export const NIGHTLY: NightlyChannel[] = [
-  // Windows 11 消费版
-  { file: "EEEOS_Win11_26H1_Pro_x64_CN_Full_Net", group: "Windows 11 消费版", tag: "专业版" },
-  { file: "EEEOS_Win11_26H1_Pro_ARM64_CN_Full_Net", group: "Windows 11 消费版", tag: "专业版" },
-  { file: "EEEOS_Win11_25H2_Pro_x64_CN_Full_Net", group: "Windows 11 消费版", tag: "专业版" },
-  { file: "EEEOS_Win11_25H2_Pro_ARM64_CN_Full_Net", group: "Windows 11 消费版", tag: "专业版" },
-  { file: "EEEOS_Win11_24H2_Pro_x64_CN_Full_Net", group: "Windows 11 消费版", tag: "专业版" },
-  { file: "EEEOS_Win11_23H2_Pro_x64_CN_Full_Net", group: "Windows 11 消费版", tag: "专业版" },
-  { file: "EEEOS_Win11_23H2_Pro_ARM64_CN_Full_Net", group: "Windows 11 消费版", tag: "专业版" },
-  { file: "EEEOS_Win11_21H2_Pro_x64_CN_Full_Net", group: "Windows 11 消费版", tag: "专业版" },
+  // Windows 11 消费版（每个版本两个变体：网卡驱动 / 全驱动）
+  { file: "EEEOS_Win11_26H1_Pro_x64_CN_Full_Net", group: "Windows 11 消费版", tag: "专业版", variant: "网卡驱动版" },
+  { file: "EEEOS_Win11_26H1_Pro_x64_CN_Full_DrvCeo", group: "Windows 11 消费版", tag: "专业版", variant: "全驱动版" },
+  { file: "EEEOS_Win11_26H1_Pro_ARM64_CN_Full_Net", group: "Windows 11 消费版", tag: "专业版", variant: "网卡驱动版" },
+  { file: "EEEOS_Win11_25H2_Pro_x64_CN_Full_Net", group: "Windows 11 消费版", tag: "专业版", variant: "网卡驱动版" },
+  { file: "EEEOS_Win11_25H2_Pro_x64_CN_Full_DrvCeo", group: "Windows 11 消费版", tag: "专业版", variant: "全驱动版" },
+  { file: "EEEOS_Win11_25H2_Pro_ARM64_CN_Full_Net", group: "Windows 11 消费版", tag: "专业版", variant: "网卡驱动版" },
+  { file: "EEEOS_Win11_24H2_Pro_x64_CN_Full_Net", group: "Windows 11 消费版", tag: "专业版", variant: "网卡驱动版" },
+  { file: "EEEOS_Win11_24H2_Pro_x64_CN_Full_DrvCeo", group: "Windows 11 消费版", tag: "专业版", variant: "全驱动版" },
+  { file: "EEEOS_Win11_23H2_Pro_x64_CN_Full_Net", group: "Windows 11 消费版", tag: "专业版", variant: "网卡驱动版" },
+  { file: "EEEOS_Win11_23H2_Pro_x64_CN_Full_DrvCeo", group: "Windows 11 消费版", tag: "专业版", variant: "全驱动版" },
+  { file: "EEEOS_Win11_23H2_Pro_ARM64_CN_Full_Net", group: "Windows 11 消费版", tag: "专业版", variant: "网卡驱动版" },
+  { file: "EEEOS_Win11_21H2_Pro_x64_CN_Full_Net", group: "Windows 11 消费版", tag: "专业版", variant: "网卡驱动版" },
+  { file: "EEEOS_Win11_21H2_Pro_x64_CN_Full_DrvCeo", group: "Windows 11 消费版", tag: "专业版", variant: "全驱动版" },
   // Windows 11 企业版 (LTSC)
-  { file: "EEEOS_Win11_LTSC2024_EntS_x64_CN_Full_Net", group: "Windows 11 企业版 (LTSC)", tag: "企业版S" },
-  { file: "EEEOS_Win11_LTSC2024_EntS_ARM64_CN_Full_Net", group: "Windows 11 企业版 (LTSC)", tag: "企业版S" },
+  { file: "EEEOS_Win11_LTSC2024_EntS_x64_CN_Full_Net", group: "Windows 11 企业版 (LTSC)", tag: "企业版S", variant: "网卡驱动版" },
+  { file: "EEEOS_Win11_LTSC2024_EntS_x64_CN_Full_DrvCeo", group: "Windows 11 企业版 (LTSC)", tag: "企业版S", variant: "全驱动版" },
+  { file: "EEEOS_Win11_LTSC2024_EntS_ARM64_CN_Full_Net", group: "Windows 11 企业版 (LTSC)", tag: "企业版S", variant: "网卡驱动版" },
   // Windows 10 消费版
-  { file: "EEEOS_Win10_22H2_Pro_x64_CN_Full_Net", group: "Windows 10 消费版", tag: "专业版" },
+  { file: "EEEOS_Win10_22H2_Pro_x64_CN_Full_Net", group: "Windows 10 消费版", tag: "专业版", variant: "网卡驱动版" },
+  { file: "EEEOS_Win10_22H2_Pro_x64_CN_Full_DrvCeo", group: "Windows 10 消费版", tag: "专业版", variant: "全驱动版" },
   // Windows 10 企业版 (LTSC/LTSB)
-  { file: "EEEOS_Win10_LTSC2021_EntS_x64_CN_Full_Net", group: "Windows 10 企业版 (LTSC/LTSB)", tag: "企业版S" },
-  { file: "EEEOS_Win10_LTSC2019_EntS_x64_CN_Full_Net", group: "Windows 10 企业版 (LTSC/LTSB)", tag: "企业版S" },
-  { file: "EEEOS_Win10_LTSB2016_EntS_x64_CN_Full_Net", group: "Windows 10 企业版 (LTSC/LTSB)", tag: "企业版S" },
+  { file: "EEEOS_Win10_LTSC2021_EntS_x64_CN_Full_Net", group: "Windows 10 企业版 (LTSC/LTSB)", tag: "企业版S", variant: "网卡驱动版" },
+  { file: "EEEOS_Win10_LTSC2021_EntS_x64_CN_Full_DrvCeo", group: "Windows 10 企业版 (LTSC/LTSB)", tag: "企业版S", variant: "全驱动版" },
+  { file: "EEEOS_Win10_LTSC2019_EntS_x64_CN_Full_Net", group: "Windows 10 企业版 (LTSC/LTSB)", tag: "企业版S", variant: "网卡驱动版" },
+  { file: "EEEOS_Win10_LTSC2019_EntS_x64_CN_Full_DrvCeo", group: "Windows 10 企业版 (LTSC/LTSB)", tag: "企业版S", variant: "全驱动版" },
+  { file: "EEEOS_Win10_LTSB2016_EntS_x64_CN_Full_Net", group: "Windows 10 企业版 (LTSC/LTSB)", tag: "企业版S", variant: "网卡驱动版" },
   // Windows 7
-  { file: "EEEOS_Win7_SP1_Ult_x64_CN_Full_Net", group: "Windows 7", tag: "旗舰版" },
+  { file: "EEEOS_Win7_SP1_Ult_x64_CN_Full_Net", group: "Windows 7", tag: "旗舰版", variant: "网卡驱动版" },
 ];
 
 // 原版（集成更新）：按 Windows 大版本 + 渠道分组
