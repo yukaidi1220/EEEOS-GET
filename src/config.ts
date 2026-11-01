@@ -71,6 +71,8 @@ export const NIGHTLY: NightlyChannel[] = [
   { file: "EEEOS_Win11_25H2_Pro_x64_CN_Full_Net", group: "Windows 11 消费版", tag: "专业版", variant: "网卡驱动版" },
   { file: "EEEOS_Win11_25H2_Pro_x64_CN_Full_DrvCeo", group: "Windows 11 消费版", tag: "专业版", variant: "全驱动版" },
   { file: "EEEOS_Win11_25H2_Pro_ARM64_CN_Full_Net", group: "Windows 11 消费版", tag: "专业版", variant: "网卡驱动版" },
+  { file: "EEEOS_Win11_26H2_Pro_x64_CN_Full_Net", group: "Windows 11 消费版", tag: "专业版", variant: "网卡驱动版" },
+  { file: "EEEOS_Win11_26H2_Pro_x64_CN_Full_DrvCeo", group: "Windows 11 消费版", tag: "专业版", variant: "全驱动版" },
   { file: "EEEOS_Win11_24H2_Pro_x64_CN_Full_Net", group: "Windows 11 消费版", tag: "专业版", variant: "网卡驱动版" },
   { file: "EEEOS_Win11_24H2_Pro_x64_CN_Full_DrvCeo", group: "Windows 11 消费版", tag: "专业版", variant: "全驱动版" },
   { file: "EEEOS_Win11_23H2_Pro_x64_CN_Full_Net", group: "Windows 11 消费版", tag: "专业版", variant: "网卡驱动版" },
